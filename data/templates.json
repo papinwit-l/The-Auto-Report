@@ -1,0 +1,133 @@
+[
+  {
+    "id": "78b4b4c4-02af-4828-a4c5-d93f1147e890",
+    "name": "TEST - 01",
+    "spreadsheetId": "1dWuhJnq_1eg9WvGRksGBmB5EoJEHipAADFcyLZJc2AI",
+    "platforms": [
+      {
+        "sheetName": "All Daily",
+        "platformLabel": "Custom",
+        "dateColumn": "Date",
+        "dateFormat": "serial",
+        "columnMap": {
+          "platform": "Channel",
+          "campaign": "Campaign name",
+          "impressions": "Impressions",
+          "clicks": "Clicks",
+          "spend": "Spent",
+          "conversions": "Conversions",
+          "reach": "Reach",
+          "engagements": "Post engagements"
+        }
+      },
+      {
+        "sheetName": "All FB Details",
+        "platformLabel": "Facebook Ads",
+        "dateColumn": "Date",
+        "dateFormat": "serial",
+        "columnMap": {
+          "campaign": "Campaign name",
+          "platform": "Channel",
+          "impressions": "Impressions",
+          "spend": "Spent",
+          "conversions": "Conversion",
+          "reach": "Reach",
+          "clicks": "Link clicks",
+          "engagements": "Page engagements"
+        },
+        "chartSheetName": "All FB Demo",
+        "chartColumnMap": {
+          "age": "Age",
+          "gender": "Gender",
+          "clicks": "Link clicks",
+          "impressions": "Impressions",
+          "spend": "Spent",
+          "conversions": "Conversion",
+          "engagements": "Post engagements"
+        }
+      }
+    ],
+    "formulas": [
+      {
+        "id": "ctr",
+        "key": "ctr",
+        "label": "CTR (%)",
+        "formula": "clicks / impressions * 100",
+        "requires": [
+          "clicks",
+          "impressions"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cpc",
+        "key": "cpc",
+        "label": "CPC",
+        "formula": "spend / clicks",
+        "requires": [
+          "spend",
+          "clicks"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cpm",
+        "key": "cpm",
+        "label": "CPM",
+        "formula": "spend / impressions * 1000",
+        "requires": [
+          "spend",
+          "impressions"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cpr",
+        "key": "cpr",
+        "label": "CPR",
+        "formula": "spend / reach * 1000",
+        "requires": [
+          "spend",
+          "reach"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cpa",
+        "key": "cpa",
+        "label": "CPA",
+        "formula": "spend / conversions",
+        "requires": [
+          "spend",
+          "conversions"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "roas",
+        "key": "roas",
+        "label": "ROAS",
+        "formula": "revenue / spend",
+        "requires": [
+          "revenue",
+          "spend"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cvr",
+        "key": "cvr",
+        "label": "CVR (%)",
+        "formula": "conversions / clicks * 100",
+        "requires": [
+          "conversions",
+          "clicks"
+        ],
+        "isBuiltIn": true
+      }
+    ],
+    "customColumns": {},
+    "createdAt": "2026-07-02T08:57:09.287Z",
+    "updatedAt": "2026-07-02T08:57:09.287Z"
+  }
+]

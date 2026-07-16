@@ -129,5 +129,111 @@
     "customColumns": {},
     "createdAt": "2026-07-02T08:57:09.287Z",
     "updatedAt": "2026-07-02T08:57:09.287Z"
+  },
+  {
+    "id": "cb541601-2a6b-4ec9-9e36-1d6858a01a31",
+    "name": "TEST - 02",
+    "spreadsheetId": "11rymsinDYEskWUFb21UpDhhqI-5ELnzUXFyerGrBLnw",
+    "platforms": [
+      {
+        "sheetName": "All Daily",
+        "platformLabel": "Custom",
+        "dateColumn": "Date",
+        "dateFormat": "serial",
+        "columnMap": {
+          "campaign": "Campaign name",
+          "platform": "Channel",
+          "impressions": "Impressions",
+          "clicks": "Clicks",
+          "spend": "Spent",
+          "conversions": "Conversions",
+          "reach": "Reach",
+          "video_views": "Video Views",
+          "followers": "Followers"
+        }
+      }
+    ],
+    "formulas": [
+      {
+        "id": "ctr",
+        "key": "ctr",
+        "label": "CTR (%)",
+        "formula": "clicks / impressions * 100",
+        "requires": [
+          "clicks",
+          "impressions"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cpc",
+        "key": "cpc",
+        "label": "CPC",
+        "formula": "spend / clicks",
+        "requires": [
+          "spend",
+          "clicks"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cpm",
+        "key": "cpm",
+        "label": "CPM",
+        "formula": "spend / impressions * 1000",
+        "requires": [
+          "spend",
+          "impressions"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cpr",
+        "key": "cpr",
+        "label": "CPR",
+        "formula": "spend / reach * 1000",
+        "requires": [
+          "spend",
+          "reach"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cpa",
+        "key": "cpa",
+        "label": "CPA",
+        "formula": "spend / conversions",
+        "requires": [
+          "spend",
+          "conversions"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "roas",
+        "key": "roas",
+        "label": "ROAS",
+        "formula": "revenue / spend",
+        "requires": [
+          "revenue",
+          "spend"
+        ],
+        "isBuiltIn": true
+      },
+      {
+        "id": "cvr",
+        "key": "cvr",
+        "label": "CVR (%)",
+        "formula": "conversions / clicks * 100",
+        "requires": [
+          "conversions",
+          "clicks"
+        ],
+        "isBuiltIn": true
+      }
+    ],
+    "customColumns": {},
+    "createdAt": "2026-07-07T10:12:08.459Z",
+    "updatedAt": "2026-07-07T10:12:08.459Z"
   }
 ]

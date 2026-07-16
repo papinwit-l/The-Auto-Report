@@ -1,1 +1,127 @@
-[]
+[
+  {
+    "id": "baaaf104-5e83-49fc-9c0f-0d62aa110132",
+    "name": "TEST Slide",
+    "slides": [
+      {
+        "id": "1963086d-89a3-4da7-a507-a00068d65f4f",
+        "template": "overall",
+        "title": "Overall Summary",
+        "kpiCards": [
+          {
+            "metric": "impressions",
+            "label": "Impressions",
+            "format": "number",
+            "showChange": true,
+            "section": "awareness"
+          },
+          {
+            "metric": "reach",
+            "label": "Reach",
+            "format": "number",
+            "showChange": true,
+            "section": "awareness"
+          },
+          {
+            "metric": "clicks",
+            "label": "Clicks",
+            "format": "number",
+            "showChange": true,
+            "section": "awareness"
+          },
+          {
+            "metric": "ctr",
+            "label": "CTR",
+            "format": "percent",
+            "showChange": true,
+            "section": "awareness"
+          },
+          {
+            "metric": "spend",
+            "label": "Spend",
+            "format": "currency",
+            "showChange": true,
+            "section": "awareness"
+          },
+          {
+            "metric": "cpm",
+            "label": "CPM",
+            "format": "currency",
+            "showChange": true,
+            "section": "awareness"
+          }
+        ],
+        "table": {
+          "groupBy": "platform",
+          "columns": [
+            "impressions",
+            "clicks",
+            "spend",
+            "ctr",
+            "cpc"
+          ],
+          "showTotal": true
+        },
+        "summary": []
+      },
+      {
+        "id": "71df2f15-3ef3-49a0-b7de-d210410fa69d",
+        "template": "table_charts",
+        "title": "Performance by Demographics",
+        "platformFilter": "Facebook Ads",
+        "kpiCards": [
+          {
+            "metric": "impressions",
+            "label": "Impressions",
+            "format": "number",
+            "showChange": true,
+            "section": "awareness"
+          },
+          {
+            "metric": "reach",
+            "label": "Reach",
+            "format": "number",
+            "showChange": true,
+            "section": "awareness"
+          },
+          {
+            "metric": "clicks",
+            "label": "Clicks",
+            "format": "number",
+            "showChange": true,
+            "section": "awareness"
+          },
+          {
+            "metric": "ctr",
+            "label": "CTR",
+            "format": "percent",
+            "showChange": true,
+            "section": "awareness"
+          }
+        ],
+        "table": {
+          "groupBy": "platform",
+          "columns": [
+            "impressions",
+            "clicks",
+            "spend",
+            "ctr",
+            "cpc"
+          ],
+          "showTotal": true
+        },
+        "charts": [
+          {
+            "type": "donut",
+            "title": "By Age",
+            "groupBy": "age",
+            "metric": "clicks"
+          }
+        ],
+        "summary": []
+      }
+    ],
+    "createdAt": "2026-07-16T04:20:14.638Z",
+    "updatedAt": "2026-07-16T04:20:14.638Z"
+  }
+]

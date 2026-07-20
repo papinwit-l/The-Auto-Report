@@ -156,6 +156,12 @@ export type SlideConfig = {
   table: TableConfig;
   charts?: ChartConfig[];
   summary: string[];
+  displaySettings?: {
+    maxTableRows: number;
+    tableFontSize: number;
+    titleFontSize: number;
+    summaryPosition: "bottom" | "hidden";
+  };
 };
 
 export type SlideTemplateFile = {

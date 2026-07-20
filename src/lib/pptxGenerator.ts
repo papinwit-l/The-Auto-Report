@@ -9,22 +9,31 @@ import type {
 } from "./dataUtils";
 import { computeChange, groupRowsBy } from "./dataUtils";
 
+type PptxOptions = {
+  logo?: {
+    data: string;
+    w?: number;
+    h?: number;
+    x?: number;
+    y?: number;
+  };
+};
+
 const SHAPE_ROUNDED_RECT: pptxgen.SHAPE_NAME = "roundRect";
 
-// ── Colors — matched to preview (Tailwind zinc palette) ──
 const C = {
-  zinc50: "FAFAFA", // bg-zinc-50
-  zinc100: "F4F4F5", // border-zinc-100 (row divider)
-  zinc200: "E4E4E7", // border-zinc-200 (card border)
-  zinc300: "D4D4D8", // border-zinc-300 (header border, total border)
-  zinc400: "A1A1AA", // text-zinc-400
-  zinc500: "71717A", // text-zinc-500 (labels, header text)
-  zinc600: "52525B", // text-zinc-600
-  zinc800: "27272A", // text-zinc-800 (values, body)
-  zinc900: "18181B", // text-zinc-900
+  zinc50: "FAFAFA",
+  zinc100: "F4F4F5",
+  zinc200: "E4E4E7",
+  zinc300: "D4D4D8",
+  zinc400: "A1A1AA",
+  zinc500: "71717A",
+  zinc600: "52525B",
+  zinc800: "27272A",
+  zinc900: "18181B",
   white: "FFFFFF",
-  emerald600: "059669", // change up
-  red500: "EF4444", // change down
+  emerald600: "059669",
+  red500: "EF4444",
   chart: [
     "#2563EB",
     "#7C3AED",
@@ -36,6 +45,16 @@ const C = {
     "#4F46E5",
   ],
 };
+
+// ── Display settings defaults ──
+function ds(config: SlideConfig) {
+  return {
+    maxTableRows: config.displaySettings?.maxTableRows ?? 12,
+    tableFontSize: config.displaySettings?.tableFontSize ?? 7,
+    titleFontSize: config.displaySettings?.titleFontSize ?? 20,
+    summaryPosition: config.displaySettings?.summaryPosition ?? "bottom",
+  };
+}
 
 // ── Helpers ──
 function fmtCompact(value: number | null): string {
@@ -53,7 +72,7 @@ function changeColor(dir: "up" | "down" | "flat"): string {
   return dir === "up" ? C.emerald600 : dir === "down" ? C.red500 : C.zinc400;
 }
 
-// ── SVG donut chart generator (matches preview MiniDonut) ──
+// ── SVG donut chart generator ──
 function generateDonutSVG(
   data: { label: string; value: number; color: string }[],
   title: string,
@@ -149,6 +168,7 @@ export async function generatePptx(
   data: ReportData,
   formulas: FormulaConfig[],
   projectName: string,
+  options: PptxOptions = {},
 ): Promise<Buffer> {
   const pres = new pptxgen();
   pres.layout = "LAYOUT_16x9";
@@ -158,6 +178,16 @@ export async function generatePptx(
   for (const slideConfig of slides) {
     const pptSlide = pres.addSlide();
     pptSlide.background = { color: C.white };
+
+    if (options.logo) {
+      pptSlide.addImage({
+        data: options.logo.data,
+        x: options.logo.x ?? 8.5,
+        y: options.logo.y ?? 0.15,
+        w: options.logo.w ?? 0.7,
+        h: options.logo.h ?? 0.4,
+      });
+    }
 
     switch (slideConfig.template) {
       case "overall":
@@ -181,11 +211,7 @@ export async function generatePptx(
   return output as Buffer;
 }
 
-// ── KPI cards — matched to preview ──
-// Preview: bg-zinc-50, border border-zinc-200, rounded
-//   label: text-zinc-500 uppercase tracking-wider, 0.4rem
-//   value: font-bold text-zinc-800, 0.7rem
-//   change: emerald-600 / red-500, 0.4rem
+// ── KPI cards ──
 function addKpiCards(
   pres: pptxgen,
   slide: pptxgen.Slide,
@@ -210,7 +236,6 @@ function addKpiCards(
     const prevValue = prevVals?.[kpi.metric] ?? null;
     const change = kpi.showChange ? computeChange(value, prevValue) : null;
 
-    // Card bg
     slide.addShape(SHAPE_ROUNDED_RECT, {
       x,
       y: startY,
@@ -221,7 +246,6 @@ function addKpiCards(
       rectRadius: 0.06,
     });
 
-    // Label
     slide.addText(kpi.label.toUpperCase(), {
       x: textX,
       y: startY + 0.06,
@@ -233,7 +257,6 @@ function addKpiCards(
       align: "left",
     });
 
-    // Value
     slide.addText((kpi.format === "currency" ? "฿" : "") + fmtCompact(value), {
       x: textX,
       y: startY + 0.22,
@@ -246,7 +269,6 @@ function addKpiCards(
       align: "left",
     });
 
-    // Change
     if (change && change.percent !== null) {
       slide.addText(
         `${changeArrow(change.direction)} ${Math.abs(change.percent).toFixed(1)}%`,
@@ -267,7 +289,7 @@ function addKpiCards(
   return startY + cardH + 0.15;
 }
 
-// ── Standard slide (overall, single_table, table_creatives) ──
+// ── Standard slide ──
 async function buildStandardSlide(
   pres: pptxgen,
   slide: pptxgen.Slide,
@@ -275,20 +297,20 @@ async function buildStandardSlide(
   data: ReportData,
   formulas: FormulaConfig[],
 ) {
-  // Title — matches preview: text-sm font-bold text-zinc-800
+  const { titleFontSize, summaryPosition } = ds(config);
+
   slide.addText(config.title, {
     x: 0.5,
     y: 0.25,
     w: 9,
     h: 0.4,
-    fontSize: 20,
+    fontSize: titleFontSize,
     fontFace: "Calibri",
     bold: true,
     color: C.zinc800,
     margin: 0,
   });
 
-  // Subtitle (platform name) — matches preview: text-zinc-500, 0.5rem
   if (config.platformFilter) {
     slide.addText(config.platformFilter, {
       x: 0.5,
@@ -317,6 +339,10 @@ async function buildStandardSlide(
 
   const rows = getRows(data, config.platformFilter);
   addDataTable(pres, slide, config, rows, data, formulas, tableY);
+
+  if (summaryPosition !== "hidden") {
+    addSummary(slide, config.summary);
+  }
 }
 
 // ── Table + charts slide ──
@@ -327,12 +353,14 @@ async function buildTableChartsSlide(
   data: ReportData,
   formulas: FormulaConfig[],
 ) {
+  const { titleFontSize, summaryPosition } = ds(config);
+
   slide.addText(config.title, {
     x: 0.5,
     y: 0.25,
     w: 9,
     h: 0.4,
-    fontSize: 20,
+    fontSize: titleFontSize,
     fontFace: "Calibri",
     bold: true,
     color: C.zinc800,
@@ -366,11 +394,8 @@ async function buildTableChartsSlide(
   tableY += 0.1;
 
   const rows = getRows(data, config.platformFilter);
-
-  // Table left 60%
   addDataTable(pres, slide, config, rows, data, formulas, tableY, 0.5, 5.5);
 
-  // Chart images right 40%
   if (config.charts && config.charts.length > 0 && data.chartData) {
     const availableH = 5.1 - tableY;
     const chartCount = config.charts.length;
@@ -409,12 +434,13 @@ async function buildTableChartsSlide(
       });
     }
   }
+
+  if (summaryPosition !== "hidden") {
+    addSummary(slide, config.summary);
+  }
 }
 
-// ── Data table — matched to preview ──
-// Preview header: transparent bg, text-zinc-500 font-medium, border-b border-zinc-300
-// Preview rows: border-b border-zinc-100, 0.45rem
-// Preview total: border-t-2 border-zinc-300, font-bold
+// ── Data table ──
 function addDataTable(
   pres: pptxgen,
   slide: pptxgen.Slide,
@@ -426,16 +452,18 @@ function addDataTable(
   startX: number = 0.5,
   tableW: number = 9,
 ) {
+  const { maxTableRows, tableFontSize } = ds(config);
   const grouped = groupRowsBy(rows, config.table.groupBy, formulas);
   const cols = config.table.columns;
   const colW = [tableW * 0.3, ...cols.map(() => (tableW * 0.7) / cols.length)];
 
-  // Header — light bg, gray text (matches preview)
   const headerRow: pptxgen.TableCell[] = [
     {
-      text: config.table.groupBy,
+      text:
+        config.table.groupBy.charAt(0).toUpperCase() +
+        config.table.groupBy.slice(1),
       options: {
-        fontSize: 8,
+        fontSize: tableFontSize,
         fontFace: "Calibri",
         color: C.zinc500,
         fill: { color: C.white },
@@ -445,7 +473,7 @@ function addDataTable(
         border: [
           { type: "none" },
           { type: "none" },
-          { pt: 1.5, color: C.zinc300 }, // bottom
+          { pt: 1.5, color: C.zinc300 },
           { type: "none" },
         ],
       },
@@ -453,7 +481,7 @@ function addDataTable(
     ...cols.map((col) => ({
       text: col,
       options: {
-        fontSize: 8,
+        fontSize: tableFontSize,
         fontFace: "Calibri",
         color: C.zinc500,
         fill: { color: C.white },
@@ -470,9 +498,8 @@ function addDataTable(
     })),
   ];
 
-  // Data rows — alternating white/zinc-50, thin bottom border
   const dataRows: pptxgen.TableCell[][] = grouped
-    .slice(0, 12)
+    .slice(0, maxTableRows)
     .map((row, idx) => {
       const bgColor = idx % 2 === 0 ? C.white : C.zinc50;
       const rowBorder = [
@@ -486,7 +513,7 @@ function addDataTable(
         {
           text: row.group,
           options: {
-            fontSize: 8,
+            fontSize: tableFontSize,
             fontFace: "Calibri",
             color: C.zinc800,
             fill: { color: bgColor },
@@ -498,7 +525,7 @@ function addDataTable(
         ...cols.map((col) => ({
           text: fmtCompact(row.totals[col] ?? row.metrics[col] ?? null),
           options: {
-            fontSize: 8,
+            fontSize: tableFontSize,
             fontFace: "Calibri",
             color: C.zinc800,
             fill: { color: bgColor },
@@ -510,11 +537,10 @@ function addDataTable(
       ];
     });
 
-  // Total row — bold, top border (matches preview: border-t-2 border-zinc-300)
   if (config.table.showTotal) {
     const totals = getCurrentTotals(data, config.platformFilter);
     const totalBorder = [
-      { pt: 2, color: C.zinc300 }, // top — thick like preview
+      { pt: 2, color: C.zinc300 },
       { type: "none" as const },
       { type: "none" as const },
       { type: "none" as const },
@@ -525,7 +551,7 @@ function addDataTable(
         text: "Total",
         options: {
           bold: true,
-          fontSize: 8,
+          fontSize: tableFontSize,
           fontFace: "Calibri",
           color: C.zinc800,
           fill: { color: C.white },
@@ -538,7 +564,7 @@ function addDataTable(
         text: fmtCompact(totals[col] ?? null),
         options: {
           bold: true,
-          fontSize: 8,
+          fontSize: tableFontSize,
           fontFace: "Calibri",
           color: C.zinc800,
           fill: { color: C.white },
@@ -555,7 +581,41 @@ function addDataTable(
     y: startY,
     w: tableW,
     colW,
-    rowH: 0.26,
+    rowH: 0.23,
     margin: [2, 6, 2, 6],
+  });
+}
+
+// ── Summary ──
+function addSummary(
+  slide: pptxgen.Slide,
+  summary: string[],
+  startY: number = 4.6,
+) {
+  if (summary.length === 0) return;
+
+  slide.addText("Summary", {
+    x: 0.5,
+    y: startY,
+    w: 9,
+    h: 0.2,
+    fontSize: 8,
+    fontFace: "Calibri",
+    bold: true,
+    color: C.zinc800,
+  });
+
+  const text = summary.map((line) => `•  ${line}`).join("\n");
+
+  slide.addText(text, {
+    x: 0.5,
+    y: startY + 0.2,
+    w: 9,
+    h: 0.8,
+    fontSize: 7,
+    fontFace: "Calibri",
+    color: C.zinc500,
+    lineSpacingMultiple: 1.3,
+    valign: "top",
   });
 }

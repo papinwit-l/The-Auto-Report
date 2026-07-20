@@ -10,6 +10,7 @@ type Props = {
   formulas: FormulaConfig[];
   isActive: boolean;
   onClick: () => void;
+  logo?: string | null;
 };
 
 function formatMetric(value: number | null): string {
@@ -89,6 +90,7 @@ export default function SlidePreview({
   formulas,
   isActive,
   onClick,
+  logo,
 }: Props) {
   // Get platform-specific or overall data
   const platformData: PlatformData | null = slide.platformFilter
@@ -143,6 +145,16 @@ export default function SlidePreview({
           className="absolute inset-0 p-5 flex flex-col"
           style={{ fontSize: "0.55rem" }}
         >
+          {/* Logo */}
+          {logo && (
+            <img
+              src={logo}
+              alt=""
+              className="absolute"
+              style={{ top: 12, right: 16, height: 28, width: "auto" }}
+            />
+          )}
+
           {/* Title bar */}
           <div className="mb-3">
             <h3 className="text-sm font-bold text-zinc-800">{slide.title}</h3>
@@ -232,27 +244,32 @@ export default function SlidePreview({
                     </tr>
                   </thead>
                   <tbody>
-                    {grouped.slice(0, 8).map((row) => (
-                      <tr key={row.group} className="border-b border-zinc-100">
-                        <td
-                          className="py-0.5 px-1 truncate max-w-[120px]"
-                          style={{ fontSize: "0.45rem" }}
+                    {grouped
+                      .slice(0, slide.displaySettings?.maxTableRows ?? 8)
+                      .map((row) => (
+                        <tr
+                          key={row.group}
+                          className="border-b border-zinc-100"
                         >
-                          {row.group}
-                        </td>
-                        {slide.table.columns.map((col) => (
                           <td
-                            key={col}
-                            className="text-right py-0.5 px-1"
+                            className="py-0.5 px-1 truncate max-w-[120px]"
                             style={{ fontSize: "0.45rem" }}
                           >
-                            {formatMetric(
-                              row.totals[col] ?? row.metrics[col] ?? null,
-                            )}
+                            {row.group}
                           </td>
-                        ))}
-                      </tr>
-                    ))}
+                          {slide.table.columns.map((col) => (
+                            <td
+                              key={col}
+                              className="text-right py-0.5 px-1"
+                              style={{ fontSize: "0.45rem" }}
+                            >
+                              {formatMetric(
+                                row.totals[col] ?? row.metrics[col] ?? null,
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
                     {slide.table.showTotal && (
                       <tr className="border-t-2 border-zinc-300 font-bold">
                         <td
@@ -364,6 +381,27 @@ export default function SlidePreview({
               </div>
             )}
           </div>
+
+          {/* Summary */}
+          {slide.summary.length > 0 && (
+            <div className="mt-auto pt-2">
+              <p
+                className="font-bold text-zinc-700 mb-0.5"
+                style={{ fontSize: "0.45rem" }}
+              >
+                Summary
+              </p>
+              {slide.summary.map((line, i) => (
+                <p
+                  key={i}
+                  className="text-zinc-600"
+                  style={{ fontSize: "0.4rem", lineHeight: 1.4 }}
+                >
+                  • {line}
+                </p>
+              ))}
+            </div>
+          )}
 
           {/* No data state */}
           {!data && (

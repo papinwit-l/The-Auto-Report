@@ -9,10 +9,11 @@ const TEMPLATES_PATH = path.join(process.cwd(), "data", "templates.json");
 
 export async function POST(request: NextRequest) {
   try {
-    const { templateId, slides, reportData } = (await request.json()) as {
+    const { templateId, slides, reportData, logo } = (await request.json()) as {
       templateId: string;
       slides: SlideConfig[];
       reportData: ReportData;
+      logo?: { data: string; w?: number; h?: number; x?: number; y?: number };
     };
 
     // Load template for formulas and project name
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
       reportData,
       template.formulas,
       template.name,
+      { logo },
     );
 
     return new NextResponse(new Uint8Array(buffer), {

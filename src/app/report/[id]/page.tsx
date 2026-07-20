@@ -13,6 +13,9 @@ import {
   Pencil,
   Save,
   FolderOpen,
+  ImageIcon,
+  X,
+  Settings,
 } from "lucide-react";
 import type {
   ProjectMapping,
@@ -23,6 +26,8 @@ import type {
 import type { ReportData } from "@/lib/dataUtils";
 import AddSlideDialog from "@/components/AddSlideDialog";
 import SlidePreview from "@/components/SlidePreview";
+import { generateSummary } from "@/lib/summaryGenerator";
+import SlideSettingsModal from "@/components/SlideSettingsModal";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -37,6 +42,9 @@ export default function SlideBuilderPage({ params }: PageProps) {
   const [activeSlide, setActiveSlide] = useState<string | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingSlide, setEditingSlide] = useState<SlideConfig | null>(null);
+  const [logoBase64, setLogoBase64] = useState<string | null>(null);
+
+  const [settingsSlide, setSettingsSlide] = useState<SlideConfig | null>(null);
 
   // Date range
   const [startDate, setStartDate] = useState("");
@@ -93,6 +101,14 @@ export default function SlideBuilderPage({ params }: PageProps) {
       if (!res.ok) throw new Error(result.error || "Failed to process");
 
       setReportData(result.data);
+
+      // Auto-generate summaries for all slides
+      setSlides((prev) =>
+        prev.map((s) => ({
+          ...s,
+          summary: generateSummary(s, result.data, template!.formulas),
+        })),
+      );
     } catch (err: unknown) {
       setFetchError(err instanceof Error ? err.message : "Fetch error");
     } finally {
@@ -100,17 +116,33 @@ export default function SlideBuilderPage({ params }: PageProps) {
     }
   }, [template, startDate, endDate, useAllData]);
 
-  // Add slide
+  // Logo file handler
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setLogoBase64(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  // Also auto-generate when adding a new slide — update the addSlide function:
   const addSlide = (slide: SlideConfig) => {
+    const withSummary = reportData
+      ? {
+          ...slide,
+          summary: generateSummary(slide, reportData, template!.formulas),
+        }
+      : slide;
+
     if (editingSlide) {
-      // Update existing slide
-      setSlides((prev) => prev.map((s) => (s.id === slide.id ? slide : s)));
+      setSlides((prev) =>
+        prev.map((s) => (s.id === withSummary.id ? withSummary : s)),
+      );
       setEditingSlide(null);
     } else {
-      // Add new slide
-      setSlides((prev) => [...prev, slide]);
+      setSlides((prev) => [...prev, withSummary]);
     }
-    setActiveSlide(slide.id);
+    setActiveSlide(withSummary.id);
     setShowAddDialog(false);
   };
 
@@ -146,6 +178,7 @@ export default function SlideBuilderPage({ params }: PageProps) {
           templateId: template?.id,
           slides,
           reportData,
+          logo: logoBase64 ? { data: logoBase64 } : undefined,
         }),
       });
 
@@ -255,6 +288,33 @@ export default function SlideBuilderPage({ params }: PageProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer">
+            {logoBase64 ? (
+              <>
+                <img src={logoBase64} alt="logo" className="h-4 w-auto" />
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setLogoBase64(null);
+                  }}
+                  className="text-zinc-500 hover:text-red-400"
+                >
+                  <X size={12} />
+                </button>
+              </>
+            ) : (
+              <>
+                <ImageIcon size={14} />
+                Logo
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/svg+xml"
+              onChange={handleLogoUpload}
+              className="hidden"
+            />
+          </label>
           <button
             onClick={loadSlideTemplatesList}
             className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-sm transition-colors"
@@ -406,6 +466,16 @@ export default function SlideBuilderPage({ params }: PageProps) {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        setSettingsSlide(slide);
+                      }}
+                      className="text-zinc-600 hover:text-zinc-300 p-0.5"
+                      title="Slide settings"
+                    >
+                      <Settings size={10} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         moveSlide(slide.id, "up");
                       }}
                       disabled={idx === 0}
@@ -455,6 +525,7 @@ export default function SlideBuilderPage({ params }: PageProps) {
                   formulas={template.formulas}
                   isActive={activeSlide === slide.id}
                   onClick={() => setActiveSlide(slide.id)}
+                  logo={logoBase64}
                 />
               ))}
             </div>
@@ -551,6 +622,21 @@ export default function SlideBuilderPage({ params }: PageProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {settingsSlide && (
+        <SlideSettingsModal
+          slide={settingsSlide}
+          reportData={reportData}
+          formulas={template.formulas}
+          onSave={(updated) => {
+            setSlides((prev) =>
+              prev.map((s) => (s.id === updated.id ? updated : s)),
+            );
+            setSettingsSlide(null);
+          }}
+          onClose={() => setSettingsSlide(null)}
+        />
       )}
     </div>
   );

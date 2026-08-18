@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, FileText, Trash2, Pencil } from "lucide-react";
+import { Plus, FileText, Trash2, Pencil, Upload, Download } from "lucide-react";
 import type { ProjectMapping } from "@/types";
 
 export default function Dashboard() {
@@ -23,17 +23,63 @@ export default function Dashboard() {
     setTemplates((prev) => prev.filter((t) => t.id !== id));
   };
 
+  const exportTemplate = (t: ProjectMapping) => {
+    const blob = new Blob([JSON.stringify(t, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${t.name.replace(/[^a-zA-Z0-9-_ ]/g, "")}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importTemplate = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported: ProjectMapping = JSON.parse(text);
+      // Give it a new ID to avoid conflicts
+      imported.id = crypto.randomUUID();
+      imported.updatedAt = new Date().toISOString();
+
+      await fetch("/api/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(imported),
+      });
+      setTemplates((prev) => [...prev, imported]);
+    } catch {
+      alert("Invalid template file.");
+    }
+    e.target.value = "";
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-semibold">Projects</h1>
-        <button
-          onClick={() => router.push("/report/new")}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          <Plus size={16} />
-          New Report
-        </button>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer">
+            <Upload size={14} />
+            Import
+            <input
+              type="file"
+              accept=".json"
+              onChange={importTemplate}
+              className="hidden"
+            />
+          </label>
+          <button
+            onClick={() => router.push("/report/new")}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Plus size={16} />
+            New Report
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -76,6 +122,13 @@ export default function Dashboard() {
                   title="Delete template"
                 >
                   <Trash2 size={14} />
+                </button>
+                <button
+                  onClick={() => exportTemplate(t)}
+                  className="text-zinc-600 hover:text-zinc-300 p-1"
+                  title="Export template"
+                >
+                  <Download size={14} />
                 </button>
               </div>
             </div>

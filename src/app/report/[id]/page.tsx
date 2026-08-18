@@ -16,6 +16,7 @@ import {
   ImageIcon,
   X,
   Settings,
+  Upload,
 } from "lucide-react";
 import type {
   ProjectMapping,
@@ -198,6 +199,42 @@ export default function SlideBuilderPage({ params }: PageProps) {
     }
   };
 
+  const exportSlideTemplate = () => {
+    if (slides.length === 0) return;
+    const data = {
+      name: template?.name ?? "slides",
+      slides,
+      exportedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `slides-${template?.name?.replace(/[^a-zA-Z0-9-_ ]/g, "") ?? "export"}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importSlideTemplate = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      const importedSlides: SlideConfig[] = imported.slides ?? [];
+      if (importedSlides.length === 0) throw new Error("No slides");
+      setSlides(importedSlides);
+      setActiveSlide(importedSlides[0]?.id ?? null);
+    } catch {
+      alert("Invalid slide template file.");
+    }
+    e.target.value = "";
+  };
+
   // Save slide template
   const saveSlideTemplate = async () => {
     if (!slideTemplateName.trim() || slides.length === 0) return;
@@ -329,6 +366,26 @@ export default function SlideBuilderPage({ params }: PageProps) {
             title="Save slide template"
           >
             <Save size={14} />
+          </button>
+          <label
+            className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer"
+            title="Import slides from file"
+          >
+            <Upload size={14} />
+            <input
+              type="file"
+              accept=".json"
+              onChange={importSlideTemplate}
+              className="hidden"
+            />
+          </label>
+          <button
+            onClick={exportSlideTemplate}
+            disabled={slides.length === 0}
+            className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 px-3 py-2 rounded-lg text-sm transition-colors"
+            title="Export slides to file"
+          >
+            <Download size={14} />
           </button>
           <button
             onClick={() => setShowAddDialog(true)}
